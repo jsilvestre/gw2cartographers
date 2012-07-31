@@ -799,6 +799,7 @@ p.marker-permalink { text-align: right; }
     cursor: default;
     z-index: 101;
     padding: 10px;
+    width: 100%;
   }
   .customInfoWindow label {
     position: relative;
