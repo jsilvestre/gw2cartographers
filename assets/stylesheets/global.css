@@ -415,6 +415,13 @@ html, body {
   -webkit-border-radius: 0px 15px 15px 15px;
   border-radius: 0px 15px 15px 15px;
 }
+
+#playlist.menu-marker .menu-item ul.type-menu {
+    top: 75px;
+    -webkit-border-radius: 0px 0px 15px 15px;
+    border-radius: 0px 0px 15px 15px;
+}
+
 .menu-marker .menu-item ul.type-menu li {
   position: relative;
   z-index: 12;
@@ -868,9 +875,30 @@ p.marker-permalink { text-align: right; }
     color: #BBB;
 }
 
+#playlist .playlist-tool {
+    display: none;
+    position: absolute;
+    z-index: 11;
+    min-width: 165px;
+    height: 35px;
+    top: 30px;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    background: #fff;
+    list-style-type: none;
+    border: 10px solid rgba(0, 0, 0, 0.7);
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    -webkit-border-radius: 0px 15px 15px 15px;
+    border-radius: 0px 15px 0px 0px;
+}
+
 #playlist ul.type-menu li.selected .marker-type-link {
     background: rgba(0, 0, 0, 0.5);
     color: #FFF;
 }
-
+#playlist .menu-item:hover .playlist-tool {
+    display: block;
+}
 /*}}}*/

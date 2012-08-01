@@ -49,6 +49,84 @@ class TemplatesLoader
       $.get(@templates[templateName], (e)=>
         callback(e)
       )
+
+class Playlist
+
+    constructor: (map)->
+        @map = map
+        @selectedMarker = null
+        @markers = new Array()
+
+        $('html').keydown((e)=>
+            if e.keyCode is 37
+                @shiftCurrentMarkerToLeft()
+            else if e.keyCode is 39
+                @shiftCurrentMarkerToRight()
+        )
+
+        $('#pl-prev').click((e)=>
+            @shiftCurrentMarkerToLeft()
+        )
+        $('#pl-next').click((e)=>
+            @shiftCurrentMarkerToRight()
+        )
+
+    addMarker: (markerGroup, markerType, markerID)->
+
+        if @markers[markerID]?
+            return
+
+        marker = null
+        marker = mark for mark in  @map.gMarker[markerGroup]['marker_types'][markerType]['markers'] when mark.__gm_id is markerID
+
+        if marker? && marker['data_translation']? && marker['data_translation'][window.LANG]['title']? && marker['data_translation'][window.LANG]['title'] isnt ""
+            markerTitle = marker['data_translation'][window.LANG]['title']
+        else
+            markerTitle = @map.gMarker[markerGroup]['marker_types'][markerType]['data_translation'][window.LANG]['name']
+
+        if markerTitle.length >= 15
+            markerTitle = markerTitle.substr(0, 12) + '...'
+        
+        iconPath = @map.markersImages[markerType].url
+
+        item = $(
+            '<li class="type-menu-item" data-markerID="'+markerID+'"><a class="marker-type-link"><img src="'+iconPath+'" /><span>'+markerTitle+'</span></a></li>');
+        
+        item.click((e)=>
+            marker = $(e.currentTarget)
+            @setSelectedMarker(marker)
+        )
+        
+        @markers[markerID] = marker
+        $('#playlist ul.type-menu').append(item);
+
+    removeMarker: (markerID)->
+        $('#playlist .type-menu-item').each((item)->
+            if item.attr('data-markerID') is markerID
+                item.remove()
+        )
+
+    setSelectedMarker: (marker)->
+        $('#playlist .type-menu-item.selected').removeClass('selected')
+        marker.addClass('selected')
+        
+        m = @markers[marker.attr('data-markerID')]
+        @map.map.panTo(m.getPosition())
+        if @map.currentOpenedInfoWindow? then @map.currentOpenedInfoWindow.close()
+        m["infoWindow"].open()
+
+    shiftCurrentMarkerToLeft: ()->
+        selectedItem = $('#playlist .type-menu-item.selected')
+        marker = if selectedItem.prev().length > 0 then selectedItem.prev() else $('#playlist .type-menu-item').last()
+        if marker.length > 0
+            @setSelectedMarker(marker);
+
+    shiftCurrentMarkerToRight: ()->
+        selectedItem = $('#playlist .type-menu-item.selected')
+        marker = if selectedItem.next().length > 0 then selectedItem.next() else $('#playlist .type-menu-item').first()
+        if marker.length > 0
+            @setSelectedMarker(marker);
+
 ###
 # class ModalBox {{{
 ###
@@ -191,6 +269,7 @@ class CustomMap
     @map = new google.maps.Map($(id)[0], @gMapOptions)
     @map.mapTypes.set('custom', @customMapType)
     @map.setMapTypeId('custom')
+
     @templateLoader = new TemplatesLoader()
     @templateLoader.getTemplate("confirmBox", (e)=>
       template = _.template(e);
@@ -228,6 +307,9 @@ class CustomMap
     
         #marker
         @gMarker = {}
+
+        @playlist = new Playlist(this);
+        
         @currentMapVersion = 1;
 
         @editInfoWindowTemplate = ""
@@ -359,10 +441,11 @@ class CustomMap
     )
 
     google.maps.event.addListener(marker, 'click', (e)=>
+
+      @playlist.addMarker(marker["cat"], marker["type"], marker.__gm_id)
       if marker["infoWindow"]?
         if @currentOpenedInfoWindow is marker["infoWindow"]
           @currentOpenedInfoWindow.close()
-          
         else
           if @currentOpenedInfoWindow then @currentOpenedInfoWindow.close()
           marker["infoWindow"].open()
